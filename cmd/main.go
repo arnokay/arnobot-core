@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"arnobot-shared/applog"
+	"arnobot-shared/cache"
+	"arnobot-shared/cache/mapcacher"
 	mbControllers "arnobot-shared/controllers/mb"
 	"arnobot-shared/db"
-	"arnobot-shared/pkg"
 	"arnobot-shared/pkg/assert"
-	"arnobot-shared/pkg/mapcacher"
 	"arnobot-shared/storage"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
@@ -29,9 +29,9 @@ type application struct {
 
 	db        *pgxpool.Pool
 	queries   db.Querier
-	cache     pkg.Cacher
+	cache     cache.Cacher
 	msgBroker *nats.Conn
-  storage       storage.Storager
+	storage   storage.Storager
 
 	services      *service.Services
 	mbControllers mbControllers.NatsController
@@ -102,11 +102,13 @@ func openMB() (*nats.Conn, jetstream.JetStream, jetstream.KeyValue) {
 	assert.NoError(err, "openMB: cannot open message broker connection")
 
 	js, err := jetstream.New(nc)
-  assert.NoError(err, "openMB: cannot open jetstream")
+	assert.NoError(err, "openMB: cannot open jetstream")
 	kv, err := js.CreateKeyValue(context.Background(), jetstream.KeyValueConfig{
 		Bucket: "default-core",
 	})
-  assert.NoError(err, "openMB: cannot create KVstore")
+	assert.NoError(err, "openMB: cannot create KVstore")
+
+  v, err := kv.Get(context.Background(), "kek")
 
 	return nc, js, kv
 }
