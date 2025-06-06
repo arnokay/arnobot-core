@@ -3,7 +3,7 @@ package controller
 import (
 	"fmt"
 
-	"arnobot-shared/mbtypes"
+	"arnobot-shared/apptype"
 	"arnobot-shared/topics"
 
 	"github.com/nats-io/nats.go"
@@ -16,7 +16,7 @@ func (c *MessageController) Connect(conn *nats.Conn) {
 }
 
 func (c *MessageController) NewChatMessage(msg *nats.Msg) {
-	var payload mbtypes.CoreChatMessageNotify
+	var payload apptype.CoreChatMessageNotify
 
 	payload.Decode(msg.Data)
 
