@@ -7,18 +7,19 @@ import (
 	"time"
 
 	"arnobot-shared/applog"
-	"arnobot-shared/cache"
-	"arnobot-shared/cache/mapcacher"
 	mbControllers "arnobot-shared/controllers/mb"
 	"arnobot-shared/db"
 	"arnobot-shared/pkg/assert"
 	"arnobot-shared/storage"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 
 	"arnobot-core/internal/app/config"
 	"arnobot-core/internal/app/service"
+	"arnobot-core/internal/cmdcenter"
+	"arnobot-core/internal/cmdcenter/command"
 	"arnobot-core/internal/mb/controller"
 )
 
@@ -29,16 +30,20 @@ type application struct {
 
 	db        *pgxpool.Pool
 	queries   db.Querier
-	cache     cache.Cacher
+	cache     jetstream.KeyValue
+	queue     jetstream.JetStream
 	msgBroker *nats.Conn
 	storage   storage.Storager
 
-	services      *service.Services
-	mbControllers mbControllers.NatsController
+	services       *service.Services
+	commandManager *cmdcenter.CommandManager
+	mbControllers  mbControllers.NatsController
 }
 
 func main() {
 	var app application
+
+  ctx := context.Background()
 
 	// load config
 	cfg := config.Load()
@@ -48,20 +53,27 @@ func main() {
 	app.logger = logger
 
 	// load db
-	dbConn := openDB()
+	dbConn := openDB(ctx)
 	app.db = dbConn
 
-	// load cache
-	cache := mapcacher.New()
-	app.cache = &cache
 
-	// load message broker
-	mbConn, _, _ := openMB()
+	// load message broker, queue and cache
+	mbConn, queue, cache := openMB(ctx)
 	app.msgBroker = mbConn
+  app.queue = queue
+  app.cache = cache
+
 
 	// load storage
 	store := storage.NewStorage(app.db)
 	app.storage = store
+
+	// load command manager
+	app.commandManager = cmdcenter.NewCommandManager(app.cache)
+
+  // load commands
+  pingPong := command.NewPingCommand()
+  app.commandManager.Add(ctx, pingPong)
 
 	// load services
 	services := &service.Services{}
@@ -73,7 +85,7 @@ func main() {
 	app.Start()
 }
 
-func openDB() *pgxpool.Pool {
+func openDB(ctx context.Context) *pgxpool.Pool {
 	cfg, err := pgxpool.ParseConfig(config.Config.DB.DSN)
 	assert.NoError(err, "openDB: cannot open database connection")
 
@@ -85,11 +97,8 @@ func openDB() *pgxpool.Pool {
 
 	cfg.MaxConnIdleTime = duration
 
-	pool, err := pgxpool.NewWithConfig(context.Background(), cfg)
+	pool, err := pgxpool.NewWithConfig(ctx, cfg)
 	assert.NoError(err, "openDB: cannot open database connection")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
 
 	err = pool.Ping(ctx)
 	assert.NoError(err, "openDB: cannot ping")
@@ -97,18 +106,16 @@ func openDB() *pgxpool.Pool {
 	return pool
 }
 
-func openMB() (*nats.Conn, jetstream.JetStream, jetstream.KeyValue) {
+func openMB(ctx context.Context) (*nats.Conn, jetstream.JetStream, jetstream.KeyValue) {
 	nc, err := nats.Connect(config.Config.MB.URL)
 	assert.NoError(err, "openMB: cannot open message broker connection")
 
 	js, err := jetstream.New(nc)
 	assert.NoError(err, "openMB: cannot open jetstream")
-	kv, err := js.CreateKeyValue(context.Background(), jetstream.KeyValueConfig{
+	kv, err := js.CreateKeyValue(ctx, jetstream.KeyValueConfig{
 		Bucket: "default-core",
 	})
 	assert.NoError(err, "openMB: cannot create KVstore")
-
-  v, err := kv.Get(context.Background(), "kek")
 
 	return nc, js, kv
 }

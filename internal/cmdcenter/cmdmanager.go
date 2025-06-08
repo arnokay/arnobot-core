@@ -4,11 +4,12 @@ import (
 	"context"
 	"log/slog"
 	"strings"
+	"time"
 
 	"arnobot-shared/apperror"
 	"arnobot-shared/applog"
-	"arnobot-shared/cache"
 	"arnobot-shared/events"
+	"github.com/nats-io/nats.go/jetstream"
 
 	"arnobot-core/internal/cmdcenter/command"
 )
@@ -47,7 +48,7 @@ func (c *CommandContext) Context() context.Context {
 }
 
 type CommandManager struct {
-	cache cache.Cacher
+	cache jetstream.KeyValue
 
 	commands     map[string]command.Command
 	commandNames map[string]bool
@@ -55,7 +56,7 @@ type CommandManager struct {
 	logger *slog.Logger
 }
 
-func NewCommandManager(cache cache.Cacher) *CommandManager {
+func NewCommandManager(cache jetstream.KeyValue) *CommandManager {
 	logger := applog.NewServiceLogger("command-manager")
 
 	return &CommandManager{
@@ -78,72 +79,149 @@ func (m *CommandManager) parseCommand(message string) command.ParsedCommand {
 	cmd, rest, _ := strings.Cut(message, " ")
 	name := strings.TrimPrefix(cmd, command.CommandPrefix)
 	return command.ParsedCommand{
-    Prefix: command.CommandPrefix,
-    Command: name,
-    Args: rest,
-  } 
+		Prefix:  command.CommandPrefix,
+		Command: name,
+		Args:    rest,
+	}
 }
 
-func (m *CommandManager) Execute(ctx context.Context, event events.Message) (events.MessageSend, error) {
-  parsedMessage := m.parseCommand(event.Message)
+func (m *CommandManager) setBroadcasterCommandCooldown(ctx context.Context, broadcasterID string, cmd command.Command) error {
+	cooldown := time.Now().Add(cmd.Cooldown())
+	b, _ := cooldown.MarshalBinary()
+	_, err := m.cache.Put(ctx, m.getCacheKey(broadcasterID, cmd), b)
+	if err != nil {
+		m.logger.ErrorContext(
+			ctx,
+			"cannot cache command cooldown",
+			"broadcasterID", broadcasterID,
+			"cmd", m.getCommandLog(cmd),
+		)
+		return apperror.ErrExternal
+	}
 
-  cmdCtx := CommandContext{
-    context: ctx,
-    chatter: &command.PlatformUser{
-      ID: event.ChatterID,
-      Name: event.ChatterName,
-      Login: event.ChatterLogin,
-      Platform: event.Platform,
-    },
-    channel: &command.PlatformUser{
-      ID: event.BroadcasterID,
-      Name: event.BroadcasterName,
-      Login: event.BroadcasterLogin,
-      Platform: event.Platform,
-    },
-    bot: &command.PlatformUser{
-      ID: event.BotID,
-    },
-    message: &command.Message{
-      ID: event.MessageID,
-      Message: event.Message,
-      ReplyTo: event.ReplyTo,
-    },
-    command: &parsedMessage,
-  }
+	return nil
+}
 
-  command, ok := m.commands[parsedMessage.Command]
-  
-  if !ok {
-    m.logger.ErrorContext(ctx, "there is no command to execute", "command", parsedMessage.Command)
-    return events.MessageSend{}, apperror.ErrInternal
-  }
+func (m *CommandManager) getCacheKey(broadcasterID string, cmd command.Command) string {
+	return "channel:" + broadcasterID + ":cmd:" + cmd.Name()
+}
 
-  //TODO: add cooldown
-  cmdResponse, err := command.Execute(&cmdCtx)
-  if err != nil {
-    m.logger.ErrorContext(
-      ctx, 
-      "cannot execute command", 
-      "err", err, 
-      "cmd", slog.GroupValue(
-        slog.String("name", command.Name()),
-        slog.String("description", command.Description()),
-        slog.String("aliases", strings.Join(command.Aliases(), ",")),
-      ),
-    )
-    return events.MessageSend{}, apperror.ErrInternal
-  }
+func (m *CommandManager) getBroadcasterCommandCooldown(ctx context.Context, broadcasterID string, cmd command.Command) (time.Time, error) {
+	value, err := m.cache.Get(ctx, m.getCacheKey(broadcasterID, cmd))
+	if err != nil {
+		m.logger.ErrorContext(
+			ctx,
+			"cannot get command cooldown from cache",
+			"broadcasterID", broadcasterID,
+			"cmd", m.getCommandLog(cmd),
+		)
+		return time.Time{}, apperror.ErrExternal
+	}
+	var cooldown time.Time
+	err = cooldown.UnmarshalBinary(value.Value())
+	if err != nil {
+		m.logger.ErrorContext(
+			ctx,
+			"cannot unmarshal cooldown",
+			"err", err,
+			"broadcasterID", broadcasterID,
+			"cmd", m.getCommandLog(cmd),
+		)
+		return time.Time{}, apperror.ErrInternal
+	}
 
-  var response events.MessageSend
+	return cooldown, nil
+}
 
-  response.BroadcasterID = event.BroadcasterID
-  response.BotID = event.BotID
-  response.Platform = event.Platform
-  response.Message = cmdResponse.Message
-  response.ReplyTo = cmdResponse.ReplyTo
+func (m *CommandManager) Execute(ctx context.Context, event events.Message) (*events.MessageSend, error) {
+	parsedMessage := m.parseCommand(event.Message)
 
-	return response, nil
+	cmdCtx := CommandContext{
+		context: ctx,
+		chatter: &command.PlatformUser{
+			ID:       event.ChatterID,
+			Name:     event.ChatterName,
+			Login:    event.ChatterLogin,
+			Platform: event.Platform,
+		},
+		channel: &command.PlatformUser{
+			ID:       event.BroadcasterID,
+			Name:     event.BroadcasterName,
+			Login:    event.BroadcasterLogin,
+			Platform: event.Platform,
+		},
+		bot: &command.PlatformUser{
+			ID: event.BotID,
+		},
+		message: &command.Message{
+			ID:      event.MessageID,
+			Message: event.Message,
+			ReplyTo: event.ReplyTo,
+		},
+		command: &parsedMessage,
+	}
+
+	cmd, ok := m.commands[parsedMessage.Command]
+
+	if !ok {
+		m.logger.ErrorContext(ctx, "there is no command to execute", "command", parsedMessage.Command)
+		return nil, apperror.ErrInternal
+	}
+
+	cooldown, err := m.getBroadcasterCommandCooldown(ctx, event.BroadcasterID, cmd)
+	if err != nil {
+		m.logger.DebugContext(
+			ctx,
+			"no command cooldown or cache error",
+			"err", err,
+			"cmd", m.getCommandLog(cmd),
+		)
+	}
+
+	if time.Now().Before(cooldown) {
+		m.logger.DebugContext(
+			ctx,
+			"command in cooldown",
+			"now", time.Now(),
+			"cooldown", cooldown,
+			"cmd", m.getCommandLog(cmd),
+		)
+		return nil, apperror.ErrForbidden
+	}
+
+	err = m.setBroadcasterCommandCooldown(ctx, event.BroadcasterID, cmd)
+	if err != nil {
+		m.logger.DebugContext(
+			ctx,
+			"cannot set cmd cooldown or cache error",
+			"err", err,
+			"cmd", m.getCommandLog(cmd),
+		)
+	}
+	cmdResponse, err := cmd.Execute(&cmdCtx)
+	if err != nil {
+		m.logger.ErrorContext(
+			ctx,
+			"cannot execute command",
+			"err", err,
+			"cmd", slog.GroupValue(
+				slog.String("name", cmd.Name()),
+				slog.String("description", cmd.Description()),
+				slog.String("aliases", strings.Join(cmd.Aliases(), ",")),
+			),
+		)
+		return nil, apperror.ErrInternal
+	}
+
+	var response events.MessageSend
+
+	response.BroadcasterID = event.BroadcasterID
+	response.BotID = event.BotID
+	response.Platform = event.Platform
+	response.Message = cmdResponse.Message
+	response.ReplyTo = cmdResponse.ReplyTo
+
+	return &response, nil
 }
 
 func (m *CommandManager) add(ctx context.Context, name string, cmd command.Command) {
@@ -171,4 +249,12 @@ func (m *CommandManager) Add(ctx context.Context, cmd command.Command) {
 	for _, cmdName := range cmd.Aliases() {
 		m.add(ctx, cmdName, cmd)
 	}
+}
+
+func (m *CommandManager) getCommandLog(cmd command.Command) string {
+	return slog.GroupValue(
+		slog.String("name", cmd.Name()),
+		slog.String("description", cmd.Description()),
+		slog.String("aliases", strings.Join(cmd.Aliases(), ",")),
+	).String()
 }

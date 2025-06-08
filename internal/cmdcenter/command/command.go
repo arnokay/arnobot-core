@@ -15,10 +15,6 @@ type Command interface {
 	Execute(ctx CommandContext) (CommandResponse, error)
 }
 
-type CommandLogger interface {
-  Log() string
-}
-
 type CommandContext interface {
 	Chatter() *PlatformUser
 	Channel() *PlatformUser
@@ -51,4 +47,8 @@ type CommandResponse struct {
 	Message string
 	ReplyTo string
 	Private bool
+}
+
+func (c CommandResponse) ShouldRespond() bool {
+	return c.Message != ""
 }

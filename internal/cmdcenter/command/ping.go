@@ -1,24 +1,36 @@
 package command
 
 import (
-	"context"
 	"time"
 )
 
-type PingCommand struct{}
+type pingCommand struct{}
 
-func (c PingCommand) Name() string {
+func NewPingCommand() pingCommand {
+	return pingCommand{}
+}
+
+func (c pingCommand) Name() string {
 	return "ping"
 }
 
-func (c PingCommand) Description() string {
-	return "im gonna ping"
+func (c pingCommand) Aliases() []string {
+	return nil
 }
 
-func (c PingCommand) Cooldown() time.Duration {
+func (c pingCommand) Description() string {
+	return "im gonna pong"
+}
+
+func (c pingCommand) Cooldown() time.Duration {
 	return time.Second * 5
 }
 
-func (c PingCommand) Execute(ctx context.Context) string {
-  return "pong"
+func (c pingCommand) Execute(ctx CommandContext) (CommandResponse, error) {
+	response := CommandResponse{
+		Message: "pong",
+		ReplyTo: ctx.Message().ID,
+	}
+
+	return response, nil
 }
