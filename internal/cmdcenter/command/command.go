@@ -54,3 +54,17 @@ type CommandResponse struct {
 func (c CommandResponse) ShouldRespond() bool {
 	return c.Message != ""
 }
+
+type CommonCommand struct{}
+
+func (c *CommonCommand) Aliases() []string {
+	return []string{}
+}
+
+func (c *CommonCommand) Description() string {
+	return ""
+}
+
+func (c *CommonCommand) Cooldown() time.Duration {
+	return time.Second * 5
+}

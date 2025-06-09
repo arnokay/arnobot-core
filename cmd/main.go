@@ -72,6 +72,8 @@ func main() {
 	// load commands
 	cmdPing := command.NewPingCommand()
 	app.commandManager.Add(ctx, cmdPing)
+  eightBall := command.NewEightBall()
+  app.commandManager.Add(ctx, eightBall)
 
 	// load services
 	services := &service.Services{}
