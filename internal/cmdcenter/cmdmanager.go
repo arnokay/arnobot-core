@@ -2,6 +2,7 @@ package cmdcenter
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"strings"
 	"time"
@@ -96,6 +97,7 @@ func (m *CommandManager) setBroadcasterCommandCooldown(ctx context.Context, broa
 		m.logger.ErrorContext(
 			ctx,
 			"cannot cache command cooldown",
+			"err", err,
 			"broadcasterID", broadcasterID,
 			"cmd", m.getCommandLog(cmd),
 		)
@@ -106,7 +108,9 @@ func (m *CommandManager) setBroadcasterCommandCooldown(ctx context.Context, broa
 }
 
 func (m *CommandManager) getCacheKey(broadcasterID string, cmd command.Command) string {
-	return "channel:" + broadcasterID + ":cmd:" + cmd.Name()
+	key := "channel" + broadcasterID + "cmd" + cmd.Name()
+	fmt.Println(key)
+	return key
 }
 
 func (m *CommandManager) getBroadcasterCommandCooldown(ctx context.Context, broadcasterID string, cmd command.Command) (time.Time, error) {
@@ -115,6 +119,7 @@ func (m *CommandManager) getBroadcasterCommandCooldown(ctx context.Context, broa
 		m.logger.ErrorContext(
 			ctx,
 			"cannot get command cooldown from cache",
+			"err", err,
 			"broadcasterID", broadcasterID,
 			"cmd", m.getCommandLog(cmd),
 		)

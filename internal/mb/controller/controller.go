@@ -1,7 +1,24 @@
 package controller
 
-import "github.com/nats-io/nats.go"
+import (
+	"context"
+	"time"
 
-type Controllers struct {}
+	"arnobot-shared/trace"
+	"github.com/nats-io/nats.go"
+)
 
-func (c *Controllers) Connect(conn *nats.Conn) {}
+type Controllers struct {
+	MessageController *MessageController
+}
+
+func (c *Controllers) Connect(conn *nats.Conn) {
+	c.MessageController.Connect(conn)
+}
+
+func newControllerContext(traceID string) (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx = trace.Context(ctx, traceID)
+
+	return ctx, cancel
+}

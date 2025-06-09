@@ -10,8 +10,8 @@ import (
 	mbControllers "arnobot-shared/controllers/mb"
 	"arnobot-shared/db"
 	"arnobot-shared/pkg/assert"
+	sharedService "arnobot-shared/service"
 	"arnobot-shared/storage"
-
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
@@ -43,7 +43,7 @@ type application struct {
 func main() {
 	var app application
 
-  ctx := context.Background()
+	ctx := context.Background()
 
 	// load config
 	cfg := config.Load()
@@ -56,13 +56,11 @@ func main() {
 	dbConn := openDB(ctx)
 	app.db = dbConn
 
-
 	// load message broker, queue and cache
 	mbConn, queue, cache := openMB(ctx)
 	app.msgBroker = mbConn
-  app.queue = queue
-  app.cache = cache
-
+	app.queue = queue
+	app.cache = cache
 
 	// load storage
 	store := storage.NewStorage(app.db)
@@ -71,16 +69,20 @@ func main() {
 	// load command manager
 	app.commandManager = cmdcenter.NewCommandManager(app.cache)
 
-  // load commands
-  cmdPing := command.NewPingCommand()
-  app.commandManager.Add(ctx, cmdPing)
+	// load commands
+	cmdPing := command.NewPingCommand()
+	app.commandManager.Add(ctx, cmdPing)
 
 	// load services
 	services := &service.Services{}
+	services.PlatformModuleService = sharedService.NewPlatformModuleService(app.msgBroker)
+	services.MessageService = service.NewMessageService(app.commandManager, services.PlatformModuleService)
 	app.services = services
 
 	// load message broker controllers
-	app.mbControllers = &controller.Controllers{}
+	app.mbControllers = &controller.Controllers{
+		MessageController: controller.NewMessageController(app.services.MessageService),
+	}
 
 	app.Start()
 }

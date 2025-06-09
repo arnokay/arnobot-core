@@ -7,7 +7,7 @@ import (
 	"arnobot-shared/platform"
 )
 
-const CommandPrefix string = "_"
+const CommandPrefix string = "!"
 
 type Command interface {
 	Name() string
