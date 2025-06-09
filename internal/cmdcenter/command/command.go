@@ -3,6 +3,8 @@ package command
 import (
 	"context"
 	"time"
+
+	"arnobot-shared/platform"
 )
 
 const CommandPrefix string = "_"
@@ -28,7 +30,7 @@ type PlatformUser struct {
 	ID       string
 	Name     string
 	Login    string
-	Platform string
+	Platform platform.Platform
 }
 
 type Message struct {

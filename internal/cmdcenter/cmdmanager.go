@@ -62,6 +62,9 @@ func NewCommandManager(cache jetstream.KeyValue) *CommandManager {
 	return &CommandManager{
 		cache:  cache,
 		logger: logger,
+
+		commands:     map[string]command.Command{},
+		commandNames: map[string]bool{},
 	}
 }
 
@@ -211,6 +214,10 @@ func (m *CommandManager) Execute(ctx context.Context, event events.Message) (*ev
 			),
 		)
 		return nil, apperror.ErrInternal
+	}
+
+	if !cmdResponse.ShouldRespond() {
+		return nil, apperror.ErrNoAction
 	}
 
 	var response events.MessageSend

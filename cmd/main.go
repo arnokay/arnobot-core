@@ -72,8 +72,8 @@ func main() {
 	app.commandManager = cmdcenter.NewCommandManager(app.cache)
 
   // load commands
-  pingPong := command.NewPingCommand()
-  app.commandManager.Add(ctx, pingPong)
+  cmdPing := command.NewPingCommand()
+  app.commandManager.Add(ctx, cmdPing)
 
 	// load services
 	services := &service.Services{}
