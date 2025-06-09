@@ -2,7 +2,6 @@ package cmdcenter
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"strings"
 	"time"
@@ -10,6 +9,7 @@ import (
 	"arnobot-shared/apperror"
 	"arnobot-shared/applog"
 	"arnobot-shared/events"
+
 	"github.com/nats-io/nats.go/jetstream"
 
 	"arnobot-core/internal/cmdcenter/command"
@@ -109,7 +109,6 @@ func (m *CommandManager) setBroadcasterCommandCooldown(ctx context.Context, broa
 
 func (m *CommandManager) getCacheKey(broadcasterID string, cmd command.Command) string {
 	key := "channel" + broadcasterID + "cmd" + cmd.Name()
-	fmt.Println(key)
 	return key
 }
 
