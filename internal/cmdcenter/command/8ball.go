@@ -2,6 +2,9 @@ package command
 
 import (
 	"math/rand"
+	"strings"
+
+	"arnobot-shared/apperror"
 )
 
 var answers []string = []string{
@@ -45,6 +48,10 @@ func (c *EightBall) Name() string {
 }
 
 func (c *EightBall) Execute(ctx CommandContext) (CommandResponse, error) {
+	if strings.TrimSpace(ctx.Command().Args) == "" {
+		return CommandResponse{}, apperror.ErrNoAction
+	}
+
 	answerIndex := rand.Intn(answersLength - 1)
 	answer := answers[answerIndex]
 

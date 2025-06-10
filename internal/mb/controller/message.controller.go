@@ -1,8 +1,10 @@
 package controller
 
 import (
+	"errors"
 	"log/slog"
 
+	"arnobot-shared/apperror"
 	"arnobot-shared/applog"
 	"arnobot-shared/apptype"
 	"arnobot-shared/topics"
@@ -39,7 +41,7 @@ func (c *MessageController) NewChatMessage(msg *nats.Msg) {
 	defer cancel()
 
 	err := c.messageService.HandleNewMessage(ctx, payload.Data)
-	if err != nil {
+	if err != nil && !errors.Is(err, apperror.ErrNoAction) {
 		c.logger.ErrorContext(ctx, "cannot handle message")
 		return
 	}

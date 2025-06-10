@@ -2,6 +2,7 @@ package cmdcenter
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"strings"
 	"time"
@@ -207,6 +208,9 @@ func (m *CommandManager) Execute(ctx context.Context, event events.Message) (*ev
 	}
 	cmdResponse, err := cmd.Execute(&cmdCtx)
 	if err != nil {
+    if errors.Is(err, apperror.ErrNoAction) {
+      return nil, err
+    }
 		m.logger.ErrorContext(
 			ctx,
 			"cannot execute command",
@@ -262,10 +266,10 @@ func (m *CommandManager) Add(ctx context.Context, cmd command.Command) {
 	}
 }
 
-func (m *CommandManager) getCommandLog(cmd command.Command) string {
+func (m *CommandManager) getCommandLog(cmd command.Command) slog.Value {
 	return slog.GroupValue(
 		slog.String("name", cmd.Name()),
 		slog.String("description", cmd.Description()),
 		slog.String("aliases", strings.Join(cmd.Aliases(), ",")),
-	).String()
+	)
 }
