@@ -7,6 +7,7 @@ import (
 	"arnobot-shared/apperror"
 	"arnobot-shared/applog"
 	"arnobot-shared/apptype"
+	"arnobot-shared/platform"
 	"arnobot-shared/topics"
 
 	"github.com/nats-io/nats.go"
@@ -29,7 +30,8 @@ func NewMessageController(messageService *service.MessageService) *MessageContro
 }
 
 func (c *MessageController) Connect(conn *nats.Conn) {
-	conn.QueueSubscribe(topics.CoreChatMessageNotify, topics.CoreChatMessageNotify, c.NewChatMessage)
+	chatMessageNotifyTopic := topics.PlatformBroadcasterChatMessageNotify.Build(platform.All, topics.Any)
+	conn.QueueSubscribe(chatMessageNotifyTopic, chatMessageNotifyTopic, c.NewChatMessage)
 }
 
 func (c *MessageController) NewChatMessage(msg *nats.Msg) {
