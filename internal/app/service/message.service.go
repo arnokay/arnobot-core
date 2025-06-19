@@ -10,7 +10,7 @@ import (
 	"github.com/arnokay/arnobot-shared/events"
 	"github.com/arnokay/arnobot-shared/service"
 
-	"arnobot-core/internal/cmdcenter"
+	"github.com/arnokay/arnobot-core/internal/cmdcenter"
 )
 
 type MessageService struct {

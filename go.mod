@@ -1,4 +1,4 @@
-module arnobot-core
+module github.com/arnokay/arnobot-core
 
 go 1.24.2
 

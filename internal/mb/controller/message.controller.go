@@ -12,7 +12,7 @@ import (
 
 	"github.com/nats-io/nats.go"
 
-	"arnobot-core/internal/app/service"
+	"github.com/arnokay/arnobot-core/internal/app/service"
 )
 
 type MessageController struct {

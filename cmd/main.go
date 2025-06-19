@@ -16,11 +16,11 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 
-	"arnobot-core/internal/app/config"
-	"arnobot-core/internal/app/service"
-	"arnobot-core/internal/cmdcenter"
-	"arnobot-core/internal/cmdcenter/command"
-	"arnobot-core/internal/mb/controller"
+	"github.com/arnokay/arnobot-core/internal/app/config"
+	"github.com/arnokay/arnobot-core/internal/app/service"
+	"github.com/arnokay/arnobot-core/internal/cmdcenter"
+	"github.com/arnokay/arnobot-core/internal/cmdcenter/command"
+	"github.com/arnokay/arnobot-core/internal/mb/controller"
 )
 
 const APP_NAME = "core"

@@ -13,7 +13,7 @@ import (
 
 	"github.com/nats-io/nats.go/jetstream"
 
-	"arnobot-core/internal/cmdcenter/command"
+	"github.com/arnokay/arnobot-core/internal/cmdcenter/command"
 )
 
 type CommandContext struct {
