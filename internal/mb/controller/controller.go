@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"arnobot-shared/trace"
+	"github.com/arnokay/arnobot-shared/trace"
 	"github.com/nats-io/nats.go"
 )
 

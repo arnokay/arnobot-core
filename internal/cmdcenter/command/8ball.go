@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"strings"
 
-	"arnobot-shared/apperror"
+	"github.com/arnokay/arnobot-shared/apperror"
 )
 
 var answers []string = []string{

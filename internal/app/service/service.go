@@ -1,6 +1,6 @@
 package service
 
-import "arnobot-shared/service"
+import "github.com/arnokay/arnobot-shared/service"
 
 type Services struct {
 	MessageService        *MessageService

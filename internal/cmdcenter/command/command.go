@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"arnobot-shared/platform"
+	"github.com/arnokay/arnobot-shared/platform"
 )
 
 const CommandPrefix string = "!"

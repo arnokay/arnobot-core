@@ -4,11 +4,11 @@ import (
 	"errors"
 	"log/slog"
 
-	"arnobot-shared/apperror"
-	"arnobot-shared/applog"
-	"arnobot-shared/apptype"
-	"arnobot-shared/platform"
-	"arnobot-shared/topics"
+	"github.com/arnokay/arnobot-shared/apperror"
+	"github.com/arnokay/arnobot-shared/applog"
+	"github.com/arnokay/arnobot-shared/apptype"
+	"github.com/arnokay/arnobot-shared/platform"
+	"github.com/arnokay/arnobot-shared/topics"
 
 	"github.com/nats-io/nats.go"
 

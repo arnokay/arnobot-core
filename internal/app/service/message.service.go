@@ -5,10 +5,10 @@ import (
 	"errors"
 	"log/slog"
 
-	"arnobot-shared/apperror"
-	"arnobot-shared/applog"
-	"arnobot-shared/events"
-	"arnobot-shared/service"
+	"github.com/arnokay/arnobot-shared/apperror"
+	"github.com/arnokay/arnobot-shared/applog"
+	"github.com/arnokay/arnobot-shared/events"
+	"github.com/arnokay/arnobot-shared/service"
 
 	"arnobot-core/internal/cmdcenter"
 )

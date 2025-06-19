@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"arnobot-shared/apperror"
-	"arnobot-shared/applog"
-	"arnobot-shared/events"
+	"github.com/arnokay/arnobot-shared/apperror"
+	"github.com/arnokay/arnobot-shared/applog"
+	"github.com/arnokay/arnobot-shared/events"
 
 	"github.com/nats-io/nats.go/jetstream"
 
