@@ -15,7 +15,7 @@ const (
 	ENV_TWITCH_CLIENT_ID     = "TWITCH_CLIENT_ID"
 	ENV_TWITCH_CLIENT_SECRET = "TWITCH_CLIENT_SECRET"
 	ENV_TWITCH_REDIRECT_URI  = "TWITCH_REDIRECT_URI"
-	ENV_MB_URL               = "ENV_MB_URL"
+	ENV_MB_URL               = "MB_URL"
 )
 
 type config struct {
