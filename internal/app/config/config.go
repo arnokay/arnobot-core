@@ -15,12 +15,13 @@ const (
 	ENV_TWITCH_CLIENT_ID     = "TWITCH_CLIENT_ID"
 	ENV_TWITCH_CLIENT_SECRET = "TWITCH_CLIENT_SECRET"
 	ENV_TWITCH_REDIRECT_URI  = "TWITCH_REDIRECT_URI"
+	ENV_MB_URL               = "ENV_MB_URL"
 )
 
 type config struct {
-	Global    GlobalConfig
-	DB        DBConfig
-	MB        MBConfig
+	Global GlobalConfig
+	DB     DBConfig
+	MB     MBConfig
 }
 
 type GlobalConfig struct {
@@ -71,6 +72,8 @@ func Load() *config {
 	flag.IntVar(&Config.DB.MaxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
 	flag.IntVar(&Config.DB.MaxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
 	flag.StringVar(&Config.DB.MaxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
+
+	flag.StringVar(&Config.MB.URL, "mb-url", os.Getenv(ENV_MB_URL), "Nats server")
 
 	flag.Parse()
 
