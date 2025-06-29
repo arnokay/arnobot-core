@@ -78,6 +78,8 @@ func main() {
 	app.commandManager.Add(ctx, dice)
 	coin := command.NewCoinCommand()
 	app.commandManager.Add(ctx, coin)
+	gamba := command.NewGambaCommand()
+	app.commandManager.Add(ctx, gamba)
 
 	// load services
 	services := &service.Services{}
