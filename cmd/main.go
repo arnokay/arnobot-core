@@ -76,6 +76,8 @@ func main() {
 	app.commandManager.Add(ctx, eightBall)
 	dice := command.NewDiceCommand()
 	app.commandManager.Add(ctx, dice)
+	coin := command.NewCoinCommand()
+	app.commandManager.Add(ctx, coin)
 
 	// load services
 	services := &service.Services{}
