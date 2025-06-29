@@ -8,7 +8,10 @@ import (
 	"github.com/arnokay/arnobot-shared/apperror"
 )
 
-const minSides = 2
+const (
+	minSides     = 2
+	defaultSides = 6
+)
 
 func randRange(min, max int) int {
 	return rand.IntN(max-min+1) + min
@@ -37,9 +40,13 @@ func (c diceCommand) Cooldown() time.Duration {
 }
 
 func (c diceCommand) Execute(ctx CommandContext) (CommandResponse, error) {
-	sides, err := strconv.Atoi(ctx.Command().Args)
-	if err != nil {
-		return CommandResponse{}, apperror.New(apperror.CodeInvalidInput, "sides are not integer", err)
+	sides := defaultSides
+	if ctx.Command().Args != "" {
+    convSides, err := strconv.Atoi(ctx.Command().Args)
+		if err != nil {
+			return CommandResponse{}, apperror.New(apperror.CodeInvalidInput, "sides are not integer", err)
+		}
+    sides = convSides
 	}
 
 	if sides > 100 || sides < 2 {
