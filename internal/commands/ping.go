@@ -1,7 +1,9 @@
-package command
+package commands
 
 import (
 	"time"
+
+	"github.com/arnokay/arnobot-core/internal/commands/cmdtypes"
 )
 
 type pingCommand struct{}
@@ -26,10 +28,10 @@ func (c pingCommand) Cooldown() time.Duration {
 	return time.Second * 5
 }
 
-func (c pingCommand) Execute(ctx CommandContext) (CommandResponse, error) {
-	response := CommandResponse{
+func (c pingCommand) Execute(ctx cmdtypes.CommandContext) (cmdtypes.CommandResponse, error) {
+	response := cmdtypes.CommandResponse{
 		Message: "pong",
-		ReplyTo: ctx.Message().ID,
+		ReplyTo: ctx.Message.ID,
 	}
 
 	return response, nil

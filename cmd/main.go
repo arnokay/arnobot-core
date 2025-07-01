@@ -18,8 +18,7 @@ import (
 
 	"github.com/arnokay/arnobot-core/internal/app/config"
 	"github.com/arnokay/arnobot-core/internal/app/service"
-	"github.com/arnokay/arnobot-core/internal/cmdcenter"
-	"github.com/arnokay/arnobot-core/internal/cmdcenter/command"
+	"github.com/arnokay/arnobot-core/internal/commands"
 	"github.com/arnokay/arnobot-core/internal/mb/controller"
 )
 
@@ -35,9 +34,8 @@ type application struct {
 	msgBroker *nats.Conn
 	storage   storage.Storager
 
-	services       *service.Services
-	commandManager *cmdcenter.CommandManager
-	mbControllers  mbControllers.NatsController
+	services           *service.Services
+	mbControllers      mbControllers.NatsController
 }
 
 func main() {
@@ -66,26 +64,38 @@ func main() {
 	store := storage.NewStorage(app.db)
 	app.storage = store
 
-	// load command manager
-	app.commandManager = cmdcenter.NewCommandManager(app.cache)
-
-	// load commands
-	cmdPing := command.NewPingCommand()
-	app.commandManager.Add(ctx, cmdPing)
-	eightBall := command.NewEightBall()
-	app.commandManager.Add(ctx, eightBall)
-	dice := command.NewDiceCommand()
-	app.commandManager.Add(ctx, dice)
-	coin := command.NewCoinCommand()
-	app.commandManager.Add(ctx, coin)
-	gamba := command.NewGambaCommand()
-	app.commandManager.Add(ctx, gamba)
 
 	// load services
 	services := &service.Services{}
-	services.PlatformModuleService = sharedService.NewPlatformModuleService(app.msgBroker)
-	services.MessageService = service.NewMessageService(app.commandManager, services.PlatformModuleService)
+	services.PlatformModuleService = sharedService.NewPlatformModuleIn(app.msgBroker)
+  services.CmdManagerService = service.NewCmdManagerService(app.cache)
+	services.UserCommandService = service.NewUserCommandService(app.cache, app.storage, services.CmdManagerService)
+	services.UserCmdManagerService = service.NewUserCmdManagerService(
+		app.cache,
+		services.CmdManagerService,
+		services.UserCommandService,
+	)
+
+	// load services
+	services.MessageService = service.NewMessageService(
+    services.CmdManagerService, 
+    services.UserCmdManagerService, 
+    services.PlatformModuleService,
+  )
 	app.services = services
+
+  
+  // load commands
+  cmdPing := commands.NewPingCommand()
+  app.services.CmdManagerService.Add(ctx, cmdPing)
+  eightBall := commands.NewEightBall()
+  app.services.CmdManagerService.Add(ctx, eightBall)
+  dice := commands.NewDiceCommand()
+  app.services.CmdManagerService.Add(ctx, dice)
+  coin := commands.NewCoinCommand()
+  app.services.CmdManagerService.Add(ctx, coin)
+  gamba := commands.NewGambaCommand()
+  app.services.CmdManagerService.Add(ctx, gamba)
 
 	// load message broker controllers
 	app.mbControllers = &controller.Controllers{

@@ -1,10 +1,11 @@
-package command
+package commands
 
 import (
 	"math/rand"
 	"strings"
 
 	"github.com/arnokay/arnobot-shared/apperror"
+  "github.com/arnokay/arnobot-core/internal/commands/cmdtypes"
 )
 
 var answers []string = []string{
@@ -36,7 +37,7 @@ var answers []string = []string{
 var answersLength = len(answers)
 
 type EightBall struct {
-	CommonCommand
+	cmdtypes.CommonCommand
 }
 
 func NewEightBall() *EightBall {
@@ -47,17 +48,17 @@ func (c *EightBall) Name() string {
 	return "8ball"
 }
 
-func (c *EightBall) Execute(ctx CommandContext) (CommandResponse, error) {
-	if strings.TrimSpace(ctx.Command().Args) == "" {
-		return CommandResponse{}, apperror.ErrNoAction
+func (c *EightBall) Execute(ctx cmdtypes.CommandContext) (cmdtypes.CommandResponse, error) {
+	if strings.TrimSpace(ctx.Command.Args) == "" {
+		return cmdtypes.CommandResponse{}, apperror.ErrNoAction
 	}
 
 	answerIndex := rand.Intn(answersLength - 1)
 	answer := answers[answerIndex]
 
-	response := CommandResponse{
+	response := cmdtypes.CommandResponse{
 		Message: "🎱: " + answer,
-		ReplyTo: ctx.Message().ID,
+		ReplyTo: ctx.Message.ID,
 	}
 
 	return response, nil

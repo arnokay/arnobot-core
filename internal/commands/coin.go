@@ -1,8 +1,10 @@
-package command
+package commands
 
 import (
 	"math/rand/v2"
 	"time"
+
+	"github.com/arnokay/arnobot-core/internal/commands/cmdtypes"
 )
 
 type coinCommand struct{}
@@ -27,7 +29,7 @@ func (c coinCommand) Cooldown() time.Duration {
 	return time.Second * 5
 }
 
-func (c coinCommand) Execute(ctx CommandContext) (CommandResponse, error) {
+func (c coinCommand) Execute(ctx cmdtypes.CommandContext) (cmdtypes.CommandResponse, error) {
 	random := rand.IntN(6000)
 
 	side := "edge"
@@ -40,9 +42,9 @@ func (c coinCommand) Execute(ctx CommandContext) (CommandResponse, error) {
 		side = "tails"
 	}
 
-	response := CommandResponse{
+	response :=  cmdtypes.CommandResponse{
 		Message: "🪙: " + side,
-		ReplyTo: ctx.Message().ID,
+		ReplyTo: ctx.Message.ID,
 	}
 
 	return response, nil

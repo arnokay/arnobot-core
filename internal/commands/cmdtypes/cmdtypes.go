@@ -1,4 +1,4 @@
-package command
+package cmdtypes
 
 import (
 	"context"
@@ -15,15 +15,6 @@ type Command interface {
 	Description() string
 	Cooldown() time.Duration
 	Execute(ctx CommandContext) (CommandResponse, error)
-}
-
-type CommandContext interface {
-	Chatter() *PlatformUser
-	Channel() *PlatformUser
-	Bot() *PlatformUser
-	Message() *Message
-	Command() *ParsedCommand
-	Context() context.Context
 }
 
 type PlatformUser struct {
@@ -67,4 +58,13 @@ func (c *CommonCommand) Description() string {
 
 func (c *CommonCommand) Cooldown() time.Duration {
 	return time.Second * 5
+}
+
+type CommandContext struct {
+	Context context.Context
+	Chatter PlatformUser
+	Channel PlatformUser
+	Bot     PlatformUser
+	Message Message
+	Command ParsedCommand
 }

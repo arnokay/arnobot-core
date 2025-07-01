@@ -1,8 +1,10 @@
-package command
+package commands
 
 import (
 	"math/rand/v2"
 	"time"
+
+	"github.com/arnokay/arnobot-core/internal/commands/cmdtypes"
 )
 
 var numberToEmoji = map[int]string{
@@ -38,16 +40,16 @@ func (c gambaCommand) Cooldown() time.Duration {
 	return time.Second * 5
 }
 
-func (c gambaCommand) Execute(ctx CommandContext) (CommandResponse, error) {
+func (c gambaCommand) Execute(ctx cmdtypes.CommandContext) (cmdtypes.CommandResponse, error) {
 	row1 := rand.IntN(7)
 	row2 := rand.IntN(7)
 	row3 := rand.IntN(7)
 
 	message := "🎰: " + numberToEmoji[row1] + numberToEmoji[row2] + numberToEmoji[row3]
 
-	response := CommandResponse{
+	response := cmdtypes.CommandResponse{
 		Message: message,
-		ReplyTo: ctx.Message().ID,
+		ReplyTo: ctx.Message.ID,
 	}
 
 	return response, nil

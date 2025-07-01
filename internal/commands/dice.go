@@ -1,10 +1,11 @@
-package command
+package commands
 
 import (
 	"math/rand/v2"
 	"strconv"
 	"time"
 
+	"github.com/arnokay/arnobot-core/internal/commands/cmdtypes"
 	"github.com/arnokay/arnobot-shared/apperror"
 )
 
@@ -39,25 +40,25 @@ func (c diceCommand) Cooldown() time.Duration {
 	return time.Second * 5
 }
 
-func (c diceCommand) Execute(ctx CommandContext) (CommandResponse, error) {
+func (c diceCommand) Execute(ctx cmdtypes.CommandContext) (cmdtypes.CommandResponse, error) {
 	sides := defaultSides
-	if ctx.Command().Args != "" {
-    convSides, err := strconv.Atoi(ctx.Command().Args)
+	if ctx.Command.Args != "" {
+    convSides, err := strconv.Atoi(ctx.Command.Args)
 		if err != nil {
-			return CommandResponse{}, apperror.New(apperror.CodeInvalidInput, "sides are not integer", err)
+			return cmdtypes.CommandResponse{}, apperror.New(apperror.CodeInvalidInput, "sides are not integer", err)
 		}
     sides = convSides
 	}
 
 	if sides > 100 || sides < 2 {
-		return CommandResponse{}, apperror.New(apperror.CodeInvalidInput, "sides are limited to 100", nil)
+		return cmdtypes.CommandResponse{}, apperror.New(apperror.CodeInvalidInput, "sides are limited to 100", nil)
 	}
 
 	side := randRange(minSides, sides)
 
-	response := CommandResponse{
+	response := cmdtypes.CommandResponse{
 		Message: "🎲: " + strconv.Itoa(side),
-		ReplyTo: ctx.Message().ID,
+		ReplyTo: ctx.Message.ID,
 	}
 
 	return response, nil
