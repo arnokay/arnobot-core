@@ -96,6 +96,8 @@ func main() {
   app.services.CmdManagerService.Add(ctx, coin)
   gamba := commands.NewGambaCommand()
   app.services.CmdManagerService.Add(ctx, gamba)
+  cmd := commands.NewCmdCommand(app.services.UserCommandService)
+  app.services.CmdManagerService.Add(ctx, cmd)
 
 	// load message broker controllers
 	app.mbControllers = &controller.Controllers{
@@ -134,6 +136,7 @@ func openMB(ctx context.Context) (*nats.Conn, jetstream.JetStream, jetstream.Key
 	assert.NoError(err, "openMB: cannot open jetstream")
 	kv, err := js.CreateKeyValue(ctx, jetstream.KeyValueConfig{
 		Bucket: "default-core",
+    LimitMarkerTTL: time.Minute*10,
 	})
 	assert.NoError(err, "openMB: cannot create KVstore")
 

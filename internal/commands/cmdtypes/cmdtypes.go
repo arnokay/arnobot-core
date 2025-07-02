@@ -4,7 +4,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/arnokay/arnobot-shared/data"
 	"github.com/arnokay/arnobot-shared/platform"
+	"github.com/google/uuid"
 )
 
 const CommandPrefix string = "!"
@@ -21,6 +23,8 @@ type PlatformUser struct {
 	ID       string
 	Name     string
 	Login    string
+	UserID   uuid.UUID
+	Role     data.ChatterRole
 	Platform platform.Platform
 }
 

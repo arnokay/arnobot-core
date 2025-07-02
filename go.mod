@@ -3,7 +3,7 @@ module github.com/arnokay/arnobot-core
 go 1.24.4
 
 require (
-	github.com/arnokay/arnobot-shared v0.1.1-0.20250701121129-2933b27b7504
+	github.com/arnokay/arnobot-shared v0.1.1-0.20250701145637-1502e9fbed90
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/nats-io/nats.go v1.42.0
 )

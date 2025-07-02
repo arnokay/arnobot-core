@@ -6,12 +6,14 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/arnokay/arnobot-core/internal/commands/cmdtypes"
 	"github.com/arnokay/arnobot-shared/apperror"
 	"github.com/arnokay/arnobot-shared/applog"
+	"github.com/arnokay/arnobot-shared/data"
 	"github.com/arnokay/arnobot-shared/events"
 	"github.com/arnokay/arnobot-shared/platform"
 	"github.com/nats-io/nats.go/jetstream"
+
+	"github.com/arnokay/arnobot-core/internal/commands/cmdtypes"
 )
 
 type CmdManagerService struct {
@@ -36,13 +38,13 @@ func NewCmdManagerService(cache jetstream.KeyValue) *CmdManagerService {
 }
 
 func (m *CmdManagerService) IsCommand(cmdName string) bool {
-  hasPrefix := strings.HasPrefix(cmdName, cmdtypes.CommandPrefix)
-  if !hasPrefix {
-    return false
-  }
-  cmdName = strings.TrimPrefix(cmdName, cmdtypes.CommandPrefix)
-  _, ok := m.commandNames[cmdName]
-  return ok
+	hasPrefix := strings.HasPrefix(cmdName, cmdtypes.CommandPrefix)
+	if !hasPrefix {
+		return false
+	}
+	cmdName = strings.TrimPrefix(cmdName, cmdtypes.CommandPrefix)
+	_, ok := m.commandNames[cmdName]
+	return ok
 }
 
 func (m *CmdManagerService) IsCommandEvent(event events.Message) bool {
@@ -124,12 +126,15 @@ func (m *CmdManagerService) Execute(ctx context.Context, event events.Message) (
 			ID:       event.ChatterID,
 			Name:     event.ChatterName,
 			Login:    event.ChatterLogin,
+			Role:     event.ChatterRole,
 			Platform: event.Platform,
 		},
 		Channel: cmdtypes.PlatformUser{
 			ID:       event.BroadcasterID,
 			Name:     event.BroadcasterName,
 			Login:    event.BroadcasterLogin,
+			UserID:   event.UserID,
+			Role:     data.ChatterBroadcaster,
 			Platform: event.Platform,
 		},
 		Bot: cmdtypes.PlatformUser{
