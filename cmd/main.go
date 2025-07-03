@@ -27,15 +27,15 @@ const APP_NAME = "core"
 type application struct {
 	logger *slog.Logger
 
-	db        *pgxpool.Pool
-	queries   db.Querier
-	cache     jetstream.KeyValue
-	queue     jetstream.JetStream
-	msgBroker *nats.Conn
-	storage   storage.Storager
+	db          *pgxpool.Pool
+	queries     db.Querier
+	cache       jetstream.KeyValue
+	eventStream jetstream.JetStream
+	pubSub      *nats.Conn
+	storage     storage.Storager
 
-	services           *service.Services
-	mbControllers      mbControllers.NatsController
+	services      *service.Services
+	mbControllers mbControllers.NatsController
 }
 
 func main() {
@@ -56,19 +56,18 @@ func main() {
 
 	// load message broker, queue and cache
 	mbConn, queue, cache := openMB(ctx)
-	app.msgBroker = mbConn
-	app.queue = queue
+	app.pubSub = mbConn
+	app.eventStream = queue
 	app.cache = cache
 
 	// load storage
 	store := storage.NewStorage(app.db)
 	app.storage = store
 
-
 	// load services
 	services := &service.Services{}
-	services.PlatformModuleService = sharedService.NewPlatformModuleIn(app.msgBroker)
-  services.CmdManagerService = service.NewCmdManagerService(app.cache)
+	services.PlatformModuleService = sharedService.NewPlatformModuleIn(app.pubSub)
+	services.CmdManagerService = service.NewCmdManagerService(app.cache)
 	services.UserCommandService = service.NewUserCommandService(app.cache, app.storage, services.CmdManagerService)
 	services.UserCmdManagerService = service.NewUserCmdManagerService(
 		app.cache,
@@ -78,26 +77,25 @@ func main() {
 
 	// load services
 	services.MessageService = service.NewMessageService(
-    services.CmdManagerService, 
-    services.UserCmdManagerService, 
-    services.PlatformModuleService,
-  )
+		services.CmdManagerService,
+		services.UserCmdManagerService,
+		services.PlatformModuleService,
+	)
 	app.services = services
 
-  
-  // load commands
-  cmdPing := commands.NewPingCommand()
-  app.services.CmdManagerService.Add(ctx, cmdPing)
-  eightBall := commands.NewEightBall()
-  app.services.CmdManagerService.Add(ctx, eightBall)
-  dice := commands.NewDiceCommand()
-  app.services.CmdManagerService.Add(ctx, dice)
-  coin := commands.NewCoinCommand()
-  app.services.CmdManagerService.Add(ctx, coin)
-  gamba := commands.NewGambaCommand()
-  app.services.CmdManagerService.Add(ctx, gamba)
-  cmd := commands.NewCmdCommand(app.services.UserCommandService)
-  app.services.CmdManagerService.Add(ctx, cmd)
+	// load commands
+	cmdPing := commands.NewPingCommand()
+	app.services.CmdManagerService.Add(ctx, cmdPing)
+	eightBall := commands.NewEightBall()
+	app.services.CmdManagerService.Add(ctx, eightBall)
+	dice := commands.NewDiceCommand()
+	app.services.CmdManagerService.Add(ctx, dice)
+	coin := commands.NewCoinCommand()
+	app.services.CmdManagerService.Add(ctx, coin)
+	gamba := commands.NewGambaCommand()
+	app.services.CmdManagerService.Add(ctx, gamba)
+	cmd := commands.NewCmdCommand(app.services.UserCommandService)
+	app.services.CmdManagerService.Add(ctx, cmd)
 
 	// load message broker controllers
 	app.mbControllers = &controller.Controllers{
@@ -134,9 +132,9 @@ func openMB(ctx context.Context) (*nats.Conn, jetstream.JetStream, jetstream.Key
 
 	js, err := jetstream.New(nc)
 	assert.NoError(err, "openMB: cannot open jetstream")
-	kv, err := js.CreateKeyValue(ctx, jetstream.KeyValueConfig{
-		Bucket: "default-core",
-    LimitMarkerTTL: time.Minute*10,
+	kv, err := js.CreateOrUpdateKeyValue(ctx, jetstream.KeyValueConfig{
+		Bucket:         "default-core",
+		LimitMarkerTTL: time.Minute * 10,
 	})
 	assert.NoError(err, "openMB: cannot create KVstore")
 

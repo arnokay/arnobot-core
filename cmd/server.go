@@ -61,7 +61,7 @@ func (app *application) Shutdown(ctx context.Context) error {
 
 		done := make(chan struct{})
 		go func() {
-			err := app.msgBroker.Drain()
+			err := app.pubSub.Drain()
 			if err != nil {
 				errCh <- err
 			}
@@ -73,7 +73,7 @@ func (app *application) Shutdown(ctx context.Context) error {
 			app.logger.Debug("#shutdown.mb: gracefully closed mb connection")
 		case <-ctx.Done():
 			app.logger.Debug("#shutdown.mb: context timeout, force closing message broker connection")
-			app.msgBroker.Close()
+			app.pubSub.Close()
 			app.logger.Debug("#shutdown:mb: force closed mb connection")
 		}
 	}()
@@ -93,15 +93,15 @@ func (app *application) Shutdown(ctx context.Context) error {
 }
 
 func startMBServer(a *application) error {
-	if a.msgBroker == nil {
+	if a.pubSub == nil {
 		return errors.New("startMBServer: msgBroker is nil")
 	}
 
-	if a.msgBroker.IsClosed() {
+	if a.pubSub.IsClosed() {
 		return errors.New("startMBServer: msgBroker is closed")
 	}
 
-	a.mbControllers.Connect(a.msgBroker)
+	a.mbControllers.Connect(a.pubSub)
 
 	return nil
 }
