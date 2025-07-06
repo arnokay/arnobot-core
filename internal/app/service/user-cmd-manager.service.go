@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"errors"
-	"log/slog"
+	
 	"strings"
 	"time"
 
@@ -21,7 +21,7 @@ type UserCmdManagerService struct {
 	cmdManagerService     *CmdManagerService
 	userCommandService *UserCommandService
 
-	logger *slog.Logger
+	logger applog.Logger
 }
 
 func NewUserCmdManagerService(

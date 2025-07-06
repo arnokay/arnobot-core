@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"log/slog"
+	
 
 	"github.com/arnokay/arnobot-shared/applog"
 	"github.com/arnokay/arnobot-shared/topics"
@@ -12,7 +12,7 @@ import (
 
 type UserCommandController struct {
 	userCommandService *service.UserCommandService
-	logger             *slog.Logger
+	logger             applog.Logger
 }
 
 func NewUserCommandController(

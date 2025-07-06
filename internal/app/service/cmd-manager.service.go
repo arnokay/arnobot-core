@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+
 	"strings"
 
 	"github.com/arnokay/arnobot-shared/apperror"
@@ -22,7 +23,7 @@ type CmdManagerService struct {
 	commands     map[string]cmdtypes.Command
 	commandNames map[string]bool
 
-	logger *slog.Logger
+	logger applog.Logger
 }
 
 func NewCmdManagerService(cache jetstream.KeyValue) *CmdManagerService {

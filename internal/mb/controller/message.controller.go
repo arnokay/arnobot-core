@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"log/slog"
+	
 
 	"github.com/arnokay/arnobot-shared/applog"
 	"github.com/arnokay/arnobot-shared/pkg/assert"
@@ -13,7 +13,7 @@ import (
 
 type MessageController struct {
 	messageService *service.MessageService
-	logger         *slog.Logger
+	logger         applog.Logger
 }
 
 func NewMessageController(messageService *service.MessageService) *MessageController {

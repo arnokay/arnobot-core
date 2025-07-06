@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
+	
 
 	"github.com/arnokay/arnobot-shared/apperror"
 	"github.com/arnokay/arnobot-shared/applog"
@@ -19,7 +19,7 @@ type UserCommandService struct {
 	store             storage.Storager
 	cmdManagerService *CmdManagerService
 
-	logger *slog.Logger
+	logger applog.Logger
 }
 
 func NewUserCommandService(

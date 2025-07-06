@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"errors"
-	"log/slog"
+	
 
 	"github.com/arnokay/arnobot-shared/apperror"
 	"github.com/arnokay/arnobot-shared/applog"
@@ -16,7 +16,7 @@ type MessageService struct {
 	userCmdManagerService *UserCmdManagerService
 	platformModuleService *service.PlatformModuleIn
 
-	logger *slog.Logger
+	logger applog.Logger
 }
 
 func NewMessageService(

@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log/slog"
+	
 	"os"
 	"time"
 
@@ -25,7 +25,7 @@ import (
 const APP_NAME = "core"
 
 type application struct {
-	logger *slog.Logger
+	logger applog.Logger
 
 	db          *pgxpool.Pool
 	queries     db.Querier
@@ -47,7 +47,8 @@ func main() {
 	cfg := config.Load()
 
 	// load logger
-	logger := applog.Init(APP_NAME, os.Stdout, cfg.Global.LogLevel)
+	logger := applog.NewCharmLogger(os.Stdout, APP_NAME, cfg.Global.LogLevel, nil)
+  applog.SetDefault(logger)
 	app.logger = logger
 
 	// load db
